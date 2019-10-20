@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        
+        <link rel="stylesheet" href="./styles.css">
+        <script src="./scripts/webgl-utils.js"></script>
+        <script src="./scripts/xml2json.js"></script>    
+        <script src="./scripts/matrix.js"></script>        
+        <script src="./scripts/basket.js"></script>
+        <script src="./scripts/parse_collada.js"></script>        
+        <script src="./scripts/render_models.js"></script>
+        <script id="3d-vertex-shader" type="GLSL">  
+            precision highp float;
+            const int MAXBONES = 100;
+            
+            attribute vec4 a_position;
+            attribute vec4 a_color;            
+            attribute vec3 a_normal;  
+            attribute vec2 a_textcoord; 
+            attribute vec4 a_bones_id;
+            attribute vec4 a_bones_weight;                     
+
+            uniform vec3 u_eye;
+            uniform vec3 u_light;            
+            uniform mat4 u_MVP;
+            uniform mat4 u_MV1T;
+            uniform mat4 u_MV;              
+            
+            uniform mat4 u_bind_shape_matrix;
+            uniform mat4 u_inv_bind_mat[MAXBONES];
+            uniform mat4 u_bones_mat[MAXBONES];
+
+            varying vec4 v_color;            
+            varying vec3 v_normal;
+            varying vec3 v_light;       
+            varying vec4 v_position;
+            varying vec3 v_eye;  
+            varying vec2 v_textcoord;     
+            varying vec4 v_bones_id;
+            varying vec4 v_bones_weight;     
+
+            void main() {    
+                v_textcoord = a_textcoord;            
+                v_color = a_color;
+                v_bones_id = a_bones_id;
+                v_bones_weight = a_bones_weight;              
+                v_normal = normalize(mat3(u_MV1T) * a_normal);                
+
+                float sumw = 0.0;
+
+                vec4 v = a_position;
+                vec4 outv = vec4(0.0, 0.0, 0.0, 0.0);
+                                
+                int bone_id = 0;
+
+                vec4 v_mult_BSM = v * u_bind_shape_matrix;
+                vec4 tmp4;
+                
+                bone_id = int(a_bones_id[0] + 0.2);
+                if (bone_id >= 0) {
+                    tmp4 = ((v_mult_BSM * u_inv_bind_mat[bone_id]) * u_bones_mat[bone_id]) * a_bones_weight[0];
+                    sumw += a_bones_weight[0];
+                    outv = outv + tmp4;
+                }
+
+                bone_id = int(a_bones_id[1] + 0.2);
+                if (bone_id >= 0) {                    
+                    tmp4 = ((v_mult_BSM * u_inv_bind_mat[bone_id]) * u_bones_mat[bone_id]) * a_bones_weight[1];
+                    sumw += a_bones_weight[1];
+                    outv = outv + tmp4;
+                }
+
+                bone_id = int(a_bones_id[2] + 0.2);
+                if (bone_id >= 0) {                
+                    tmp4 = ((v_mult_BSM * u_inv_bind_mat[bone_id]) * u_bones_mat[bone_id]) * a_bones_weight[2];
+                    sumw += a_bones_weight[2];
+                    outv = outv + tmp4;
+                }   
+
+                bone_id = int(a_bones_id[3] + 0.2);
+                if (bone_id >= 0) {
+                    tmp4 = ((v_mult_BSM * u_inv_bind_mat[bone_id]) * u_bones_mat[bone_id]) * a_bones_weight[3];
+                    sumw += a_bones_weight[3];
+                    outv = outv + tmp4;
+                }
+                
+
+                if (0.9 > sumw || sumw > 1.1) {                    
+                    v_color = vec4(0.0, 0.0, 0.0, 1.0);
+                }
+
+                gl_Position = u_MVP * outv;
+                
+                v_position = u_MV * outv;
+                v_light = u_light;
+                v_eye = u_eye;       
+                            
+            }
+        </script>
+        <script id="3d-fragment-shader" type="GLSL">
+            // Устанавливаем точность
+            precision highp float;
+
+            uniform sampler2D u_texture;
+
+            // Цвета из вершинного шейдера
+            varying vec4 v_color;            
+            varying vec3 v_normal;
+            varying vec3 v_light;       
+            varying vec4 v_position;
+            varying vec3 v_eye;
+            varying vec2 v_textcoord;
+
+            void main() {
+                // Устанавливаем цвет   
+                vec3 me_light = normalize(v_light - vec3(v_position));
+
+                float cs_fi = dot(me_light, v_normal);
+                cs_fi = max(0.0, cs_fi);                                       
+
+                vec4 tmp = v_color * (cs_fi + 0.24);
+                tmp[3] = 1.0;
+                gl_FragColor = tmp;
+                
+            }
+        </script>
+        <title>3D animation by Sert</title>
+    </head>
+    <body>    
+
+        <canvas id="canvas" style="background-color: black" width="650" height="710">
+            Your browser is so bad and old, that can't do anything!
+        </canvas>
+            
+        <div id="control">
+            <p>
+            Load .DAE file:
+            <input type="file" id="file" onchange="readFile()" multiple>      
+            <button type="button" onclick="btnPlayPress()">Play</button> 
+            <button type="button" onclick="btnStopPress()">Stop</button> 
+            <input type="range" id="slider">                 
+            </p>
+        </div>        
+    
+</body></html>

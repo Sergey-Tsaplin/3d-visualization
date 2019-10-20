@@ -80,9 +80,6 @@ class Model {
             bonesWeight = this.model_name.bones_weight;
         }
 
-        //console.log(bonesId);
-        //console.log(bonesWeight);
-
         this.bonesIdBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.bonesIdBuffer);        
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(bonesId), gl.STATIC_DRAW);    

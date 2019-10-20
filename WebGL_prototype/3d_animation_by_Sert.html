@@ -5,7 +5,6 @@
         <script src="./scripts/webgl-utils.js"></script>
         <script src="./scripts/xml2json.js"></script>    
         <script src="./scripts/matrix.js"></script>        
-        <script src="./scripts/basket.js"></script>
         <script src="./scripts/parse_collada.js"></script>        
         <script src="./scripts/render_models.js"></script>
         <script id="3d-vertex-shader" type="GLSL">  
@@ -85,7 +84,7 @@
                 
 
                 if (0.9 > sumw || sumw > 1.1) {                    
-                    v_color = vec4(0.0, 0.0, 0.0, 1.0);
+                    v_color = vec4(1.0, 0.0, 0.0, 1.0);
                 }
 
                 gl_Position = u_MVP * outv;
